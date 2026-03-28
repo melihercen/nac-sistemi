@@ -1,0 +1,49 @@
+server default {
+    listen {
+        type = auth
+        ipaddr = *
+        port = 0
+    }
+
+    listen {
+        ipaddr = *
+        port = 0
+        type = acct
+    }
+
+    authorize {
+        rest
+        # Eğer User-Name MAC formatındaysa (xx:xx:xx:xx:xx:xx) MAB olarak işaretle
+        if (User-Name =~ /^([0-9a-fA-F]{2}:){5}[0-9a-fA-F]{2}$/) {
+            update control {
+                Auth-Type := Accept
+            }
+        }
+        else {
+            pap
+        }
+    }
+
+    authenticate {
+        Auth-Type PAP {
+            pap
+        }
+        Auth-Type Accept {
+            ok
+        }
+    }
+
+    # MAB için post-auth bloğu
+    post-auth {
+        if (Calling-Station-Id) {
+            rest
+        }
+        Post-Auth-Type REJECT {
+            ok
+        }
+    }
+
+    accounting {
+        rest
+    }
+}
