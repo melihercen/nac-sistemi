@@ -182,7 +182,7 @@ curl -X POST http://localhost:8000/mab -H "Content-Type: application/json" -d "{
 
 ```powershell
 # 5 kez yanlış şifre
-1..5 | ForEach-Object { docker exec nac_freeradius radtest admin_user yanlis localhost 0 testing123 }
+docker exec nac_freeradius radtest admin_user yanlis localhost 0 testing123
 
 # 6. deneme - doğru şifre bile olsa reject almalı
 docker exec nac_freeradius radtest admin_user 123456 localhost 0 testing123
