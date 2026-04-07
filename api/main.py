@@ -7,7 +7,7 @@ from passlib.context import CryptContext
 
 
 
-app=FastAPI(title="NAC Policy Engine", docs_url=None, redoc_url=None)
+app=FastAPI(title="NAC Policy Engine")
 
 pwd_context=CryptContext(schemes=["bcrypt"],deprecated="auto")
 
