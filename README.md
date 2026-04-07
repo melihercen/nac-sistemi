@@ -56,6 +56,9 @@ Bir kullanıcının ağa bağlanma sürecinde bileşenler arasındaki iletişim 
 
 Projenin çalışabilmesi için sisteminizde **Docker** ve **Docker Compose** kurulu olmalıdır.
 
+```bash
+  git clone https://github.com/melihercen/nac-sistem.git
+```
 1. Proje ana dizinine gidin:
    ```bash
    cd nac-sistemi
@@ -112,7 +115,7 @@ docker exec nac_freeradius sh -c "echo 'User-Name=AA:BB:CC:DD:EE:FF,User-Passwor
 ```
 **Beklenen:** `Access-Accept` + `Tunnel-Private-Group-Id = "20"` (employee VLAN)
 
-**✅ Bilinmeyen MAC Adresi (Guest VLAN'a düşer)**
+**❌ Bilinmeyen MAC Adresi (Guest VLAN'a düşer)**
 ```powershell
 docker exec nac_freeradius sh -c "echo 'User-Name=11:22:33:44:55:66,User-Password=11:22:33:44:55:66,Calling-Station-Id=11:22:33:44:55:66' | radclient -x localhost auth testing123"
 ```
