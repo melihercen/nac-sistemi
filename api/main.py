@@ -7,7 +7,7 @@ from passlib.context import CryptContext
 
 
 
-app=FastAPI(title="NAC Policy Engine")
+app=FastAPI(title="NAC Policy Engine", docs_url=None, redoc_url=None)
 
 pwd_context=CryptContext(schemes=["bcrypt"],deprecated="auto")
 
@@ -44,7 +44,8 @@ async def authenticate(request: Request,db=Depends(get_db_connection)):
     rate_limit_key=f"rate_limit:{username}"
     attempts=redis_client.get(rate_limit_key)
     if attempts and int(attempts)>=5:
-        return {"control:Auth-Type": "Reject"}
+        raise HTTPException(status_code=401, detail="Rate limit asildi")
+    
     cursor=db.cursor()
     cursor.execute("SELECT value FROM radcheck WHERE username= %s AND attribute='Cleartext-Password'",(username,))
     user_record=cursor.fetchone()
@@ -53,10 +54,11 @@ async def authenticate(request: Request,db=Depends(get_db_connection)):
         hashed_password=user_record['value']
         if pwd_context.verify(password,hashed_password):
             redis_client.delete(rate_limit_key)
-            return {"control:Auth-Type":"Accept"}
+            return {}
+    
     redis_client.incr(rate_limit_key)
     redis_client.expire(rate_limit_key,300)
-    raise HTTPException(status_code=401, detail="Yanlis Sifre")
+    raise HTTPException(status_code=401, detail="Yanlis Sifre") 
 
 @app.post("/authorize")
 async def authorize(request: Request, db=Depends(get_db_connection)):
@@ -69,35 +71,33 @@ async def authorize(request: Request, db=Depends(get_db_connection)):
 
     cursor = db.cursor()
     
-    # 1. Kullanıcının hangi gruba ait olduğunu bul
-    # Eğer bir kullanıcı birden fazla gruptaysa, önceliği (priority) en yüksek olanı alıyoruz.
+    
     cursor.execute(
         "SELECT groupname FROM radusergroup WHERE username = %s ORDER BY priority DESC LIMIT 1", 
         (username,)
     )
     group_record = cursor.fetchone()
 
-    # FreeRADIUS'a döndürülecek yanıt sözlüğü
+   
     response_data = {}
 
     if group_record:
         groupname = group_record['groupname']
         
-        # 2. O gruba ait VLAN ve diğer reply atribütlerini çek
+       
         cursor.execute(
             "SELECT attribute, value FROM radgroupreply WHERE groupname = %s", 
             (groupname,)
         )
         group_replies = cursor.fetchall()
 
-        # 3. Veritabanından gelen verileri FreeRADIUS'un rlm_rest modülünün anlayacağı formata çevir
+       
         for reply in group_replies:
-            # FreeRADIUS'a bu atribütün bir "reply" (kullanıcıya geri gönderilecek) atribütü olduğunu söylüyoruz
+            
             attr_name = f"reply:{reply['attribute']}"
             response_data[attr_name] = reply['value']
 
-    # Eğer kullanıcının bir grubu varsa (örneğin Tunnel-Private-Group-Id: 10 gibi) bu veriler döner.
-    # Grubu yoksa boş bir JSON döner ve cihaz switch/AP üzerindeki varsayılan ağa düşer.
+   
     return response_data
 
 @app.post("/accounting")
@@ -187,7 +187,7 @@ async def mab(request: Request, db=Depends(get_db_connection)):
     except:
         data = {}
     
-    # FreeRADIUS MAC'i Calling-Station-Id olarak gönderiyor
+
     mac = data.get("Calling-Station-Id", "").upper()
     
     if not mac:
@@ -203,7 +203,7 @@ async def mab(request: Request, db=Depends(get_db_connection)):
     response_data = {}
     
     if mac_record:
-        # Bilinen MAC — grubuna göre VLAN ata
+       
         groupname = mac_record['groupname']
         cursor.execute(
             "SELECT attribute, value FROM radgroupreply WHERE groupname = %s",
@@ -214,7 +214,7 @@ async def mab(request: Request, db=Depends(get_db_connection)):
             response_data[f"reply:{reply['attribute']}"] = reply['value']
         response_data["control:Auth-Type"] = "Accept"
     else:
-        # Bilinmeyen MAC — guest VLAN'a at
+       
         cursor.execute(
             "SELECT attribute, value FROM radgroupreply WHERE groupname = 'guest_group'"
         )

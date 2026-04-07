@@ -12,7 +12,6 @@ server default {
     }
 
     authorize {
-        rest
         # Eğer User-Name MAC formatındaysa (xx:xx:xx:xx:xx:xx) MAB olarak işaretle
         if (User-Name =~ /^([0-9a-fA-F]{2}:){5}[0-9a-fA-F]{2}$/) {
             update control {
@@ -20,11 +19,21 @@ server default {
             }
         }
         else {
-            pap
+            # REST API'yi çağır - kullanıcıyı tanıyorsa Auth-Type = rest olarak ayarla
+            rest
+            if (ok || updated) {
+                update control {
+                    Auth-Type := rest
+                }
+            }
         }
     }
 
     authenticate {
+        # REST API üzerinden bcrypt doğrulaması
+        Auth-Type rest {
+            rest
+        }
         Auth-Type PAP {
             pap
         }
@@ -47,3 +56,4 @@ server default {
         rest
     }
 }
+

@@ -9,7 +9,7 @@ services:
       - .env
     volumes:
       - pg_data:/var/lib/postgresql/data
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql  # EKLENEN SATIR
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql 
     networks:
       - nac_net
     healthcheck:
@@ -33,7 +33,6 @@ services:
   api:
     container_name: nac_api
     restart: unless-stopped
-    # İleride API kodlarımızı yazacağımız klasörü build edeceğiz
     build: 
       context: ./api
     volumes:
@@ -64,8 +63,8 @@ services:
              chmod 640 /etc/freeradius/sites-enabled/default
              freeradius -X"
     ports:
-      - "1812:1812/udp" # Authentication [cite: 25]
-      - "1813:1813/udp" # Accounting [cite: 25]
+      - "1812:1812/udp" 
+      - "1813:1813/udp" 
     volumes:
       - ./radius/rest:/etc/raddb/mods-enabled/rest
       - ./radius/default:/etc/raddb/sites-enabled/default
